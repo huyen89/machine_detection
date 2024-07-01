@@ -19,8 +19,9 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/check', permanent=False)),
-    path('', include('check.urls')),  
+    path('api/v2/', include('api_v2.urls')),
+    # path('', RedirectView.as_view(url='/check', permanent=False)),
+    path('', include('check.urls')),
     path('admin/', admin.site.urls),
     path('<path:undefined_path>', RedirectView.as_view(url='/check', permanent=False)),
 ]
