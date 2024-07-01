@@ -4,6 +4,7 @@ import requests
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 def check(request):
     template = loader.get_template('check.html')
@@ -38,3 +39,18 @@ def results(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400) 
+
+@csrf_exempt
+@require_POST
+def file_upload(request):
+    file = request.FILES.get('file')
+    language = request.POST.get('language')
+    file_content = request.POST.get('fileContent')
+    
+    if file and file_content:
+        # Process the file and content as needed
+        print("Received File")
+
+        return JsonResponse({'status': 'success', 'message': 'File uploaded successfully'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Failed to upload file'})

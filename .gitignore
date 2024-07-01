@@ -1,0 +1,3 @@
+.dist
+api/__pycache__/*
+check/__pycache__/*
