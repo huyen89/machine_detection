@@ -122,6 +122,20 @@ class SubmissionDetailView(APIView):
             status=status.HTTP_200_OK
         )
 
+    def delete(self, request, submission_id, *args, **kwargs):
+        submission = Submission.objects.filter(id=submission_id).first()
+        if not submission:
+            return Response(
+                ResponseTemplate.getErrorResponse("Submission not found"),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        submission.delete()
+        return Response(
+            ResponseTemplate.getSuccessResponse("Submission deleted successfully"),
+            status=status.HTTP_200_OK
+        )
+
 
 class SubmissionUploadView(APIView):
     parser_classes = [MultiPartParser]
