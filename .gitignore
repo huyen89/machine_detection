@@ -1,3 +1,6 @@
 .dist
 api/__pycache__/*
 check/__pycache__/*
+**/__pycache__/*
+.idea/*
+.env
