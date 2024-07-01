@@ -643,11 +643,35 @@
                 if (document.getElementById('code-textarea').value.trim() === '' || confirm('Replace existing code with uploaded file content?')) {
                     document.getElementById('code-textarea').value = fileContent;
                     languageSelect.value = defaultLanguage;
+                    const currentLength = document.getElementById('code-textarea').value.length;
+                    document.getElementById('char-count').textContent = `${currentLength}/5000 characters`;
+                    
+                    // Create a FormData object to send file content to the server
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('language', defaultLanguage);
+                    formData.append('fileContent', fileContent);
+                    
+                    // Send the file content to the server
+                    fetch('/upload/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
                 }
             };
             
             reader.readAsText(file);
-        });   
+        });
     </script>
     
 </body>
