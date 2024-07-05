@@ -22,7 +22,7 @@ def publish_submission_to_queue(submission_id):
                 "submission_id": submission_id
             }
             channel.basic_publish(exchange='',
-                                  routing_key='machine_detection',
+                                  routing_key=settings.RABBITMQ_SETTINGS['machine_detection_queue_name'],
                                   body=json.dumps(data),
                                   properties=pika.BasicProperties(
                                       delivery_mode=pika.DeliveryMode.Persistent

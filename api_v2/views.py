@@ -1,3 +1,4 @@
+import base64
 import datetime
 
 from rest_framework.response import Response
@@ -70,12 +71,13 @@ class SubmissionView(APIView):
             )
 
         content = submission_create_serializer.data.get('content')
+        decoded_content = base64.b64decode(content).decode('utf-8')
         submission_uuid = str(uuid.uuid4())
         source_file_name = submission_uuid + datetime.datetime.now().strftime(format='%Y_%m_%d_%H_%M_%S')
         base_path = settings.SOURCE_CODE_LOCATION
         source_file_path = os.path.join(base_path, source_file_name)
         with open(source_file_path, "w") as source_file:
-            source_file.write(content)
+            source_file.write(decoded_content)
 
         data = {
             "name": submission_uuid,
