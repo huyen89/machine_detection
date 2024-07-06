@@ -99,12 +99,16 @@ class SubmissionView(APIView):
             submission_update_serializer.save()
 
             return Response(
-                ResponseTemplate.getSuccessResponse("New Submission created but cannot analyzed"),
+                ResponseTemplate.getSuccessResponse("New Submission created but cannot analyzed", {
+                    "submission_id": submission_id
+                }),
                 status=status.HTTP_200_OK
             )
 
         return Response(
-            ResponseTemplate.getSuccessResponse("New Submission created successfully"),
+            ResponseTemplate.getSuccessResponse("New Submission created successfully", {
+                "submission_id": submission_id
+            }),
             status=status.HTTP_200_OK
         )
 
@@ -198,11 +202,15 @@ class SubmissionUploadView(APIView):
             submission_update_serializer.save()
 
             return Response(
-                ResponseTemplate.getSuccessResponse("New Submission created but cannot analyzed"),
+                ResponseTemplate.getSuccessResponse("New Submission created but cannot analyzed", {
+                    "submission_id": submission_id
+                }),
                 status=status.HTTP_200_OK
             )
 
         return Response(
-            ResponseTemplate.getSuccessResponse("New Submission created successfully"),
+            ResponseTemplate.getSuccessResponse("New Submission created successfully", {
+                "submission_id": submission_id
+            }),
             status=status.HTTP_200_OK
         )
