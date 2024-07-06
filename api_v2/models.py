@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 
 
 # Create your models here.
@@ -49,4 +50,27 @@ class MachineGenCodeDetectionResult(models.Model):
     probability = models.FloatField(default=0, null=False)
     created_at = models.DateTimeField(auto_now=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
+
+
+class User(AbstractBaseUser):
+    class Meta:
+        managed = False
+        db_table = "users"
+
+    username = models.CharField(max_length=255, null=False)
+    firstname = models.CharField(max_length=255, null=False)
+    lastname = models.CharField(max_length=255, null=False)
+    email = models.EmailField(null=False, unique=True)
+    created_at = models.DateTimeField(auto_now=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True)
+    last_login = None
+    # is_staff = None
+    # is_active = None
+    # is_superuser = None
+    # first_name = None
+    # last_name = None
+    # date_joined = None
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'firstname', 'lastname']
 

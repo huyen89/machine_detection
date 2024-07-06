@@ -1,5 +1,10 @@
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
+from rest_framework.validators import UniqueValidator
+from django.contrib.auth import get_user_model
 from .models import Submission, MachineGenCodeDetectionResult
+
+User = get_user_model()
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -71,3 +76,49 @@ class SubmissionListSerializer(PaginationSerializer, SortSerializer):
 
     class Meta:
         fields = ['page', 'per_page', 'sort_by', 'sort_order', 'programming_language_id']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(allow_null=False, required=True)
+    password = serializers.CharField(allow_null=False, required=True)
+
+    class Meta:
+        fields = ['email', 'password']
+
+
+class RegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField(allow_null=False, required=True, validators=[UniqueValidator(queryset=User.objects.all())])
+    username = serializers.CharField(allow_null=False, required=True)
+    firstname = serializers.CharField(allow_null=False, required=True)
+    lastname = serializers.CharField(allow_null=False, required=True)
+    password = serializers.CharField(allow_null=False, required=True, validators=[validate_password])
+    password_confirmation = serializers.CharField(allow_null=False, required=True, validators=[validate_password])
+
+    class Meta:
+        fields = ['email', 'username', 'firstname', 'firstname', 'password']
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirmation']:
+            raise serializers.ValidationError(
+                {"password": "Password fields didn't match."})
+
+        return attrs
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data['username'],
+            firstname=validated_data['firstname'],
+            lastname=validated_data['lastname'],
+            email=validated_data['email'],
+        )
+
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user

@@ -1,19 +1,25 @@
 import base64
 import datetime
 
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator
+
 from .models import Submission, ProgrammingLanguage
 from .serializers import (
     SubmissionSerializer,
     SubmissionCreateSerializer,
     SubmissionDetailSerializer,
-    SubmissionListSerializer
+    SubmissionListSerializer,
+    LoginSerializer,
+    RegisterSerializer,
+    UserSerializer
 )
+from .authentication import JWTAuthentication
 from .utils.response_template import ResponseTemplate
 from .utils.message_queue import publish_submission_to_queue
 from django.conf import settings
@@ -21,9 +27,12 @@ from django.conf import settings
 import uuid
 import os
 
+User = get_user_model()
+
 
 # Create your views here.
 class SubmissionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         submission_list_serializer = SubmissionListSerializer(data=request.query_params)
@@ -82,7 +91,7 @@ class SubmissionView(APIView):
         data = {
             "name": submission_uuid,
             "filepath": source_file_path,
-            "user_id": 1,
+            "user_id": request.user.id,
             "programming_language_id": submission_create_serializer.data.get('programming_language_id'),
             "machine_gen_detection_status": 0,
         }
@@ -114,6 +123,8 @@ class SubmissionView(APIView):
 
 
 class SubmissionDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, submission_id, *args, **kwargs):
         submission = Submission.objects.filter(id=submission_id).prefetch_related('machine_gen_code_detection_result').first()
         if not submission:
@@ -144,6 +155,7 @@ class SubmissionDetailView(APIView):
 
 
 class SubmissionUploadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser]
 
     def post(self, request, *args, **kwargs):
@@ -185,7 +197,7 @@ class SubmissionUploadView(APIView):
         data = {
             "name": submission_uuid,
             "filepath": source_file_path,
-            "user_id": 1,
+            "user_id": request.user.id,
             "programming_language_id": programming_language_id,
             "machine_gen_detection_status": 0,
         }
@@ -212,5 +224,58 @@ class SubmissionUploadView(APIView):
             ResponseTemplate.getSuccessResponse("New Submission created successfully", {
                 "submission_id": submission_id
             }),
+            status=status.HTTP_200_OK
+        )
+
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                ResponseTemplate.getErrorResponse("Invalid request", serializer.errors),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        email = serializer.validated_data.get('email')
+        password = serializer.validated_data.get('password')
+
+        user = User.objects.filter(email=email).first()
+        if user is None or not user.check_password(password):
+            return Response(
+                ResponseTemplate.getErrorResponse("Invalid credentials"),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate the JWT token
+        jwt_token = JWTAuthentication.create_jwt(user)
+
+        return Response(
+            ResponseTemplate.getSuccessResponse("Login successfully", {
+                'token': jwt_token,
+                'user': UserSerializer(instance=user).data
+            })
+        )
+
+
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        print(User.objects.all())
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                ResponseTemplate.getErrorResponse("Invalid request", serializer.errors),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer.create(serializer.validated_data)
+        return Response(
+            ResponseTemplate.getSuccessResponse("Register successfully"),
             status=status.HTTP_200_OK
         )

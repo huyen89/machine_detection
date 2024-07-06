@@ -94,6 +94,8 @@ DATABASES = {
     }
 }
 
+# custom user model
+AUTH_USER_MODEL = "api_v2.User"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -113,6 +115,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# REST FRAMEWORK
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api_v2.authentication.JWTAuthentication',
+    ]
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -141,6 +152,10 @@ RABBITMQ_SETTINGS = {
     'username': os.getenv('RABBITMQ_USERNAME'),
     'password': os.getenv('RABBITMQ_PASSWORD'),
     'machine_detection_queue_name': os.getenv('RABBITMQ_MACHINE_DETECTION_QUEUE_NAME')
+}
+
+JWT_CONF = {
+    'TOKEN_LIFETIME_HOURS': os.getenv('TOKEN_LIFETIME_HOURS')
 }
 
 SOURCE_CODE_LOCATION = os.getenv('SOURCE_CODE_LOCATION')
