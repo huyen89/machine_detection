@@ -81,7 +81,7 @@ class SubmissionListSerializer(PaginationSerializer, SortSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id', 'username', 'email', 'firstname', 'lastname', 'created_at', 'updated_at']
 
 
 class LoginSerializer(serializers.Serializer):

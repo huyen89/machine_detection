@@ -266,7 +266,6 @@ class RegisterView(APIView):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        print(User.objects.all())
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -277,5 +276,15 @@ class RegisterView(APIView):
         serializer.create(serializer.validated_data)
         return Response(
             ResponseTemplate.getSuccessResponse("Register successfully"),
+            status=status.HTTP_200_OK
+        )
+
+
+class ProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        return Response(
+            ResponseTemplate.getSuccessResponse("", UserSerializer(instance=request.user).data),
             status=status.HTTP_200_OK
         )
