@@ -139,7 +139,7 @@ class SubmissionDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        code_content = 'aaaa'
+        code_content = ''
         try:
             with open(submission.filepath) as source_file:
                 code_content = source_file.read()
@@ -148,7 +148,7 @@ class SubmissionDetailView(APIView):
 
         submission_detail_serializer = SubmissionDetailSerializer(instance=submission)
         response = submission_detail_serializer.data
-        response['source_code'] = code_content
+        response['source_code'] = base64.b64encode(code_content.encode('UTF-8')).decode('UTF-8')
         return Response(
             ResponseTemplate.getSuccessResponse("", response),
             status=status.HTTP_200_OK
