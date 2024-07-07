@@ -7,10 +7,32 @@ from .models import Submission, MachineGenCodeDetectionResult
 User = get_user_model()
 
 
+class MachineGenCodeDetectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MachineGenCodeDetectionResult
+        fields = '__all__'
+
+
 class SubmissionSerializer(serializers.ModelSerializer):
+    machine_gen_code_detection_result = MachineGenCodeDetectionSerializer(read_only=True, many=True)
+
     class Meta:
         model = Submission
-        fields = '__all__'
+        fields = [
+            'id',
+            'name',
+            'user_id',
+            'filepath',
+            'programming_language_id',
+            'coding_problem_id',
+            'machine_gen_detection_status',
+            'code_execution_status',
+            'code_similarity_detection_status',
+            'vulnerability_detection_status',
+            'created_at',
+            'updated_at',
+            'machine_gen_code_detection_result',
+        ]
 
 
 class SubmissionCreateSerializer(serializers.ModelSerializer):
@@ -20,12 +42,6 @@ class SubmissionCreateSerializer(serializers.ModelSerializer):
 
     content = serializers.CharField(max_length=100000, required=True)
     # programming_language_id = serializers.IntegerField(min_value=1, required=True)
-
-
-class MachineGenCodeDetectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MachineGenCodeDetectionResult
-        fields = '__all__'
 
 
 class SubmissionDetailSerializer(serializers.ModelSerializer):
@@ -45,7 +61,7 @@ class SubmissionDetailSerializer(serializers.ModelSerializer):
             'vulnerability_detection_status',
             'created_at',
             'updated_at',
-            'machine_gen_code_detection_result'
+            'machine_gen_code_detection_result',
         ]
 
 
