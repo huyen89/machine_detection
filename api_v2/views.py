@@ -30,11 +30,15 @@ class SubmissionView(APIView):
         submission_list_serializer.is_valid()
 
         page = 1 if 'page' in submission_list_serializer.errors else submission_list_serializer.data.get('page')
-        per_page = 10 if 'per_page' in submission_list_serializer.errors else submission_list_serializer.data.get('per_page')
-        sort_by = 'created_at' if 'sort_by' in submission_list_serializer.errors else submission_list_serializer.data.get('sort_by')
-        sort_order = 'DESC' if 'sort_order' in submission_list_serializer.errors else submission_list_serializer.data.get('sort_order')
+        per_page = 10 if 'per_page' in submission_list_serializer.errors else submission_list_serializer.data.get(
+            'per_page')
+        sort_by = 'created_at' if 'sort_by' in submission_list_serializer.errors else submission_list_serializer.data.get(
+            'sort_by')
+        sort_order = 'DESC' if 'sort_order' in submission_list_serializer.errors else submission_list_serializer.data.get(
+            'sort_order')
 
-        submissions = Submission.objects.all().order_by(('-' if sort_order == 'DESC' else '') + sort_by)
+        submissions = Submission.objects.prefetch_related('machine_gen_code_detection_result').all().order_by(
+            ('-' if sort_order == 'DESC' else '') + sort_by)
         paginator = Paginator(submissions, per_page=per_page)
         paginated_submissions = paginator.get_page(page)
 
@@ -64,7 +68,8 @@ class SubmissionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if not ProgrammingLanguage.objects.filter(id=submission_create_serializer.data.get('programming_language_id')).first():
+        if not ProgrammingLanguage.objects.filter(
+                id=submission_create_serializer.data.get('programming_language_id')).first():
             return Response(
                 ResponseTemplate.getErrorResponse("Language not support"),
                 status=status.HTTP_400_BAD_REQUEST
@@ -115,16 +120,26 @@ class SubmissionView(APIView):
 
 class SubmissionDetailView(APIView):
     def get(self, request, submission_id, *args, **kwargs):
-        submission = Submission.objects.filter(id=submission_id).prefetch_related('machine_gen_code_detection_result').first()
+        submission = Submission.objects.filter(id=submission_id).prefetch_related(
+            'machine_gen_code_detection_result').first()
         if not submission:
             return Response(
                 ResponseTemplate.getErrorResponse("Submission not found"),
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        code_content = 'aaaa'
+        try:
+            with open(submission.filepath) as source_file:
+                code_content = source_file.read()
+        except:
+            pass
+
         submission_detail_serializer = SubmissionDetailSerializer(instance=submission)
+        response = submission_detail_serializer.data
+        response['source_code'] = code_content
         return Response(
-            ResponseTemplate.getSuccessResponse("", submission_detail_serializer.data),
+            ResponseTemplate.getSuccessResponse("", response),
             status=status.HTTP_200_OK
         )
 
@@ -168,7 +183,7 @@ class SubmissionUploadView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if source_file.size > 1024*1024*1024:
+        if source_file.size > 1024 * 1024 * 1024:
             return Response(
                 ResponseTemplate.getErrorResponse("Source file's size is too big"),
                 status=status.HTTP_400_BAD_REQUEST
